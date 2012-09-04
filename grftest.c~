@@ -1,0 +1,44 @@
+/*
+ * grftest.c
+ *
+ *
+ * Testet die Erzeugung korrelierter gaussscher Zufallsfelder mithilfe
+ * des lgorithmus von Lang (2007).
+ * 
+ * Aenderung der Frequenzen mithilfe der diskreten Fouriertransformation
+ * 
+ * 
+ *
+ * Ivo Siekmann, 23.10.2008
+ *
+ * 
+ * Compile with:
+ *
+ * gcc -Wall -pedantic -o filename filename.c
+ *
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include "grf.h"
+
+#define N 500
+
+int main(int argc, char **argv) {
+
+  double ** noise = malloc(N*sizeof(double*));
+  int i;
+
+  for(i=0; i<N; i++)
+    noise[i]=calloc(N,siezeof(double));
+
+  /* Initialisiert den Zufallsgenerator */
+  initgrf(N);
+  /* Aendert Seed des Zufallsgenerators */
+  changeSeed(815);
+
+  normgrf2D(double alpha, double hx, double **v);
+
+  return 0;  
+}
+ 

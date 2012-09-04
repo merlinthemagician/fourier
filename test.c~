@@ -1,0 +1,76 @@
+/*
+ *  test.c
+ *
+ * Testet die Fast-Fourier-Transformation fuer unterschiedliche
+ * diskretisierte Funktionen.
+ * 
+ * 
+ *
+ * Ivo Siekmann, 6.7.2008
+ *
+ * 
+ * Compile with:
+ *
+ * gcc -Wall -pedantic -o filename filename.c
+ *
+ */
+
+#define N 2048
+#define PI 3.1415926
+
+#include <stdio.h>
+#include <gsl/gsl_fft_real.h>
+#include <gsl/gsl_fft_halfcomplex.h>
+#include <math.h>
+#include <float.h>
+
+#define func(x) (fabs(x)<5)?1.0:0.0
+/* (x) */
+/* 1.0  */
+/* fabs(x)<2e-1?1.0:0.0 */
+/* (exp(-(x)*(x)) ) */
+
+static double df[N];
+
+void disc(double *discf, double x0, double xend, double hx) {
+  int i;
+  double x;
+  FILE *fp = fopen("orig.dat", "w");
+
+  for(i=0, x=x0; i<N; i++, x+=hx) {
+    discf[i] = func(x);
+    fprintf(fp, "%g\t%g\n", x, func(x));
+  }
+  fflush(fp), fclose(fp);
+} 
+
+double ItoF(double i, double R) {
+  return PI*(N/2-i)*N/((N+1)*R);
+}
+
+void trans(double *discf, double x0, double xend, double hx) {
+  double comp[2*N];
+  int i;
+  double x;
+
+  FILE *fp = fopen("trans.dat", "w"); 
+
+  gsl_fft_real_radix2_transform (discf, 1, N);
+  gsl_fft_halfcomplex_unpack (discf, comp, 1, N);
+
+  for(i=0, x=x0; i<N; i++, x+=hx) {
+    fprintf(fp, "%f\t%f\t%f\t%f\n", ItoF(i,(N-1)*hx*0.5), comp[2*i], comp[2*i+1], 
+	    (comp[2*i]*comp[2*i]+comp[2*i+1]*comp[2*i+1])/(2*PI));
+  }
+  fflush(fp), fclose(fp);
+}
+
+int main(int argc, char **argv) {
+
+  disc(df,  -10, 10, (10.0-(-10.0))/(N-1));
+
+  trans(df, -10, 10, (10.0-(-10.0))/(N-1));
+
+  return 0;  
+}
+ 
