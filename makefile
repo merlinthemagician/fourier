@@ -1,6 +1,8 @@
 #	Makefile -- Sat Apr  5 14:50:06 MET DST 1997
 #	Copyright (c) 1992, 1997 Axel T. Schreiner
-include /people/isie002/include/make/c.h
+
+# include /people/isie002/include/make/c.h
+include /Users/merlin/c/include/make/c.h
 
 D =	Fourier-Transformation
 
