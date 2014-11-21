@@ -51,3 +51,6 @@ void normgrf2D(double alpha, double hx, double **v);
  * worden sein.
  */
 void unirf2D(double alpha, double hx, double **v);
+
+/* Generates uncorrelated noise */
+void whitegrf2D(double **v);

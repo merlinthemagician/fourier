@@ -25,6 +25,7 @@
 #include <gsl/gsl_randist.h>
 
 #define OUT stdout
+#define ERR stderr
 
 #define REAL(z,i) ((z)[2*(i)])
 #define IMAG(z,i) ((z)[2*(i)+1])
@@ -43,6 +44,10 @@ static double **m;
 /* Initialisiert den Zufallsgenerator */
 void initgrf(int N) {
   int i;
+  if((N%2) != 0) {
+    fprintf(ERR, "initgrf(): Coloured noise generation only works for even grid dimension\n");
+    exit(1);
+  }
   n = N;
   r = gsl_rng_alloc (gsl_rng_taus);
   gsl_rng_set(r,4711);
@@ -148,18 +153,24 @@ void genHC2D(double alpha, double hx, double **m) {
 	IMAG(m[i],j) = 0;
       }
       else {
+	double scl;
 	x = i*hx*i*hx + j*hx*j*hx;
 
 	/* Realteil */
 	REAL(m[i],j) = gsl_ran_gaussian(r,1)/sqrt(2);
-	REAL(m[i],j) *= exp(-alpha/2*log(sqrt(x)));
+	scl= exp(-alpha/2*log(sqrt(x)));
+	/* if(isnan(scl)) { */
+	/*   fprintf(ERR, "genHC2D(): For x=%g, scl=nan\n", x); */
+	/*   exit(1); */
+	/* } */
+	REAL(m[i],j) *= scl;
 
 	/* Symmetrie */
    	REAL(m[refind(i)],refind(j)) = REAL(m[i],j);  
 
 	/* Imaginaerteil */
 	IMAG(m[i],j) = gsl_ran_gaussian(r,1)/sqrt(2);
-	IMAG(m[i],j) *= exp(-alpha/2*log(sqrt(x)));
+	IMAG(m[i],j) *= scl;
 
 	/* Symmetrie */
   	IMAG(m[refind(i)], refind(j)) = -IMAG(m[i],j);
@@ -259,6 +270,10 @@ void grf2D(double alpha, double hx, double **v) {
   for(i=0; i<n; i++) {
     for(j=0; j<n; j++) {
       v[i][j] = REAL(m[i],j);
+      /* if(isnan(v[i][j])) { */
+      /* 	fprintf(ERR, "grf2D(): v[%i][%i]=nan\n", i, j); */
+      /* 	exit(1); */
+      /* } */
     }
   }
 }
@@ -289,7 +304,7 @@ void unirf2D(double alpha, double hx, double **v) {
  */
 void normgrf2D(double alpha, double hx, double **v) {
   int i,j;
-  double mean=0, sqrsum=0, variance;
+  double mean=0, sqrsum=0, variance=0;
 
   genHC2D(alpha, hx, m);
   invfft2D(m);
@@ -297,17 +312,36 @@ void normgrf2D(double alpha, double hx, double **v) {
   for(i=0; i<n; i++) {
     for(j=0; j<n; j++) {
       v[i][j] = REAL(m[i],j);
+      /* if(isnan(v[i][j])) { */
+      /* 	fprintf(ERR, "normgrf2D(): v[%i][%i]=nan\n", i, j); */
+      /* 	exit(1); */
+      /* } */
       mean += v[i][j];
       sqrsum += v[i][j]*v[i][j];
     }
   }
   mean /= n*n;
+  /* fprintf(ERR, "normgrf2D(): mean=%g, sqrsum=%g\n", mean, sqrsum); */
+
   sqrsum /= n*n;
 
   variance = sqrsum - mean*mean;
+  /* fprintf(ERR, "normgrf2D(): variance=%g\n", variance); */
+  if(fabs(variance) > 1e-12) {
+    for(i=0; i<n; i++) {
+      for(j=0; j<n; j++) {
+	v[i][j] /= sqrt(variance);
+      }
+    }
+  }
+}
+
+/* Generates uncorrelated noise */
+void whitegrf2D(double **v) {
+  int i, j;
   for(i=0; i<n; i++) {
     for(j=0; j<n; j++) {
-      v[i][j] /= sqrt(variance);
+      v[i][j]=gsl_ran_gaussian(r, 1);
     }
   }
 }
