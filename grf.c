@@ -179,6 +179,36 @@ void genHC2D(double alpha, double hx, double **m) {
   }
 }
 
+/*Generiere halbkomplexes zweidimensionales Feld*/
+void genHC2D_noScaling(double **m) {
+  int i, j, jmax;
+  double x;
+  for(i=0; i<=n/2; i++) {
+    if( i% (n/2) == 0 ) jmax = n/2;
+    else jmax = n-1;
+    for(j=0; j<= jmax; j++) {
+      if( ( (i==0) && ( (j==0) || (j==n/2)))  || 
+	  ( (i==n/2) && ( (j==0) || (j==n/2)))  ) {
+	REAL(m[i],j) = gsl_ran_gaussian(r, 1);
+	IMAG(m[i],j) = 0;
+      }
+      else {
+	/* Realteil */
+	REAL(m[i],j) = gsl_ran_gaussian(r,1)/sqrt(2);
+
+	/* Symmetrie */
+   	REAL(m[refind(i)],refind(j)) = REAL(m[i],j);  
+
+	/* Imaginaerteil */
+	IMAG(m[i],j) = gsl_ran_gaussian(r,1)/sqrt(2);
+
+	/* Symmetrie */
+  	IMAG(m[refind(i)], refind(j)) = -IMAG(m[i],j);
+      }
+    }
+  }
+}
+
 /*Generiere halbkomplexes zweidimensionales Feld --- 
   gleichverteilte Zufallszahlen*/
 void unirfHC2D(double alpha, double hx, double **m) {
