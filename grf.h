@@ -54,3 +54,37 @@ void unirf2D(double alpha, double hx, double **v);
 
 /* Generates uncorrelated noise */
 void whitegrf2D(double **v);
+
+/* Initial condition for spatially coloured noise in Fourier space with:
+ - Intensity: w
+ - temporal correlation length: tau
+ - spatial correlation length: lambda
+
+ Spatial discretisation: hx, n
+ Temporal discretisation: ht
+
+ according to Garcia-Ojalvo, Sanchez, (1992)
+ */
+void grf_initColouredNoise(double **zeta, double w, double tau, double lambda,
+			   double hx, int n, double ht);
+
+/* Next time step of spatially coloured noise in Fourier space with:
+ - Intensity: w
+ - temporal correlation length: tau
+ - spatial correlation length: lambda
+
+ Spatial discretisation: hx, n
+ Temporal discretisation: ht
+
+ according to Garcia-Ojalvo, Sanchez, (1992)
+ */
+void grf_nextColouredNoise(double **zeta, double w, double tau, double lambda,
+			   double hx, int n, double ht);
+
+/* Print complex matrix zeta to file fp */
+void grf_printCompMatrix(FILE *fp, const double **zeta, int n);
+
+/* Convert Fourier-transformed noise back to real */
+void grf_fourier2Noise(double **m, const double **zeta, int n);
+
+void outReal(FILE *fp, double ** m);

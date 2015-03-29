@@ -7,7 +7,7 @@ include ${HOME}/c/include/make/c.h
 
 D =	Fourier-Transformation
 
-T = test$x grf$x grf.o
+T = test$x grf$x grf.o testSpatTemp$x
 
 INC=/sw/include/
 
@@ -26,3 +26,6 @@ grf.o:	grf.c;
 
 grftest$x:	grf.o grftest.c;
 	$(CC) $(CFLAGS) -o $@  grf.o grftest.c -I$(INC) $(GSL)
+
+testSpatTemp$x:	grf.o testSpatTemp.c;
+	$(CC) $(CFLAGS) -o $@ grf.o testSpatTemp.c $(GSL) -I$(INC)
