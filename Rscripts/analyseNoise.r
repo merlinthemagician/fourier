@@ -1,9 +1,9 @@
-fourierNames=list.files(path="~/c/fourier/results",pattern="*Fourier.dat");
+fourierNamesW5=list.files(path="~/c/fourier/results/w5",pattern="*Fourier.dat");
 
-fourierData=lapply(fourierNames,function(x) read.table(paste("~/c/fourier/results/",x, sep=""),sep="\t", colClasses="complex"));
+fourierDataW5=lapply(fourierNames,function(x) read.table(paste("~/c/fourier/results/w5/",x, sep=""),sep="\t", colClasses="complex"));
 
-noiseNames=list.files(path="~/c/fourier/results",pattern="*[0-9].dat");
-noiseData=lapply(noiseNames,function(x) read.table(paste("~/c/fourier/results/",x, sep=""),sep=" ", colClasses="numeric"));
+noiseNames=list.files(path="~/c/fourier/results/w5",pattern="*[0-9].dat");
+noiseData=lapply(noiseNames,function(x) read.table(paste("~/c/fourier/results/w5/",x, sep=""),sep=" ", colClasses="numeric"));
 
 Sstat=function(eps, tau,lambda, k) {
     return(eps/(tau*(1+lambda*lambda*k*k)))
@@ -14,6 +14,8 @@ cMuNu=function(lambda, hx, N, mu, nu) {
 }
 
 SstatDisc=function(eps,tau,lambda, hx, N, mu, nu) {
-    return(eps/(tau*cMuNu(lambda,hx,N,mu,nu))
+    return(eps/(tau*cMuNu(lambda,hx,N,mu,nu)))    
 }
+
+4096/var(sapply(fourierDataW5[c(1:2500)],function(x) x[1,1]))
 

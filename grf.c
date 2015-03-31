@@ -272,8 +272,7 @@ void grf_initColouredNoise(double **zeta, double w, double tau, double lambda,
   for(mu=0; mu<n; mu++) {
     for(nu=0; nu<n; nu++) {
       double cMuNu=eigenMuNu(lambda, hx, n, mu, nu);
-      double expEigen=exp(-cMuNu/tau*ht);
-      double scl=sqrt(w*(n*hx)*(n*hx)/tau/cMuNu*(1-expEigen));
+      double scl=sqrt(w*(n*hx)*(n*hx)/tau/cMuNu);
 
       REAL(zeta[mu],nu)=scl;
       REAL(zeta[mu],nu)*=REAL(m[mu],nu);
@@ -390,7 +389,7 @@ void grf_fourier2Noise(double **m, const double **zeta, int n) {
   invfft2D(m);
 }
 
-void outReal(FILE *fp, double ** m) {
+void outReal(FILE *fp, const double ** m) {
   int i, j;
   for(i=0; i<n; i++) {
     for(j=0; j<n; j++) {

@@ -87,4 +87,4 @@ void grf_printCompMatrix(FILE *fp, const double **zeta, int n);
 /* Convert Fourier-transformed noise back to real */
 void grf_fourier2Noise(double **m, const double **zeta, int n);
 
-void outReal(FILE *fp, double ** m);
+void outReal(FILE *fp, const double ** m);
