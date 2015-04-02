@@ -40,8 +40,7 @@ static gsl_rng * r;
 
 static gsl_fft_complex_wavetable *cwt;
 static gsl_fft_complex_workspace *cwork;
-static double **mT;
-static double **m;
+static double **m, **mT, **zeta;
 
 /* Initialisiert den Zufallsgenerator */
 void initgrf(int N) {
@@ -68,6 +67,11 @@ void initgrf(int N) {
   for(i=0; i<n; i++) {
     m[i] = malloc(2*n*sizeof(double));
   }
+
+  /* zeta = malloc(n*sizeof(double*)); */
+  /* for(i=0; i<n; i++) { */
+  /*   zeta[i] = malloc(2*n*sizeof(double)); */
+  /* } */
 }
 
 /*
@@ -226,8 +230,8 @@ double eigenMuNu(double lambda, double hx, int n, int mu, int nu) {
 
  according to Garcia-Ojalvo, Sanchez, (1992)
  */
-void grf_nextColouredNoise(double **zeta, double w, double tau, double lambda,
-			   double hx, int n, double ht) {
+void grf_nextColouredNoiseFourier(double **zeta, double w, double tau,
+				  double lambda, double hx, int n, double ht) {
   int mu, nu;
   /* Initialise Fourier field */
   genHC2D_noScaling(m);
@@ -264,8 +268,8 @@ void grf_nextColouredNoise(double **zeta, double w, double tau, double lambda,
 
  according to Garcia-Ojalvo, Sanchez, (1992)
  */
-void grf_initColouredNoise(double **zeta, double w, double tau, double lambda,
-			   double hx, int n, double ht) {
+void grf_initColouredNoiseFourier(double **zeta, double w, double tau,
+				  double lambda, double hx, int n, double ht) {
   int mu, nu;
   /* Initialise Fourier field */
   genHC2D_noScaling(m);
@@ -285,6 +289,7 @@ void grf_initColouredNoise(double **zeta, double w, double tau, double lambda,
   }
 }
 
+
 /* Print complex matrix zeta to file fp */
 void grf_printCompMatrix(FILE *fp, const double **zeta, int n) {
   int i, j;
@@ -295,13 +300,13 @@ void grf_printCompMatrix(FILE *fp, const double **zeta, int n) {
       re=REAL(zeta[i], j);
       im=IMAG(zeta[i], j);
       fprintf(fp, "%f", re);
-      if(fabs(im)>eps) fprintf(fp," %+fi", im);
+      if(fabs(im)>eps) fprintf(fp,"%+fi", im);
       fprintf(fp, "\t");
     }
     re=REAL(zeta[i], j);
     im=IMAG(zeta[i], j);
     fprintf(fp, "%f", re);
-    if(fabs(im)>eps) fprintf(fp," %+fi", im);
+    if(fabs(im)>eps) fprintf(fp,"%+fi", im);
     fprintf(fp, "\n");
   }
 }
@@ -385,10 +390,52 @@ void grf_copyMatrix(double **m, const double **a, int n) {
 }
 
 /* Convert Fourier-transformed noise back to real */
-void grf_fourier2Noise(double **m, const double **zeta, int n) {
+void grf_fourier2Noise(double **omega, const double **zeta, int n) {
+  int i, j;
   grf_copyMatrix(m, zeta, n);
   invfft2D(m);
+
+  for(i=0; i<n; i++) {
+    for(j=0; j<n; j++) {
+      omega[i][j] = REAL(m[i],j)/(n*n);
+    }
+  }
 }
+
+/* Initial condition for spatially coloured noise in 'real' space with:
+ - Intensity: w
+ - temporal correlation length: tau
+ - spatial correlation length: lambda
+
+ Spatial discretisation: hx, n
+ Temporal discretisation: ht
+
+ according to Garcia-Ojalvo, Sanchez, (1992)
+ */
+void grf_initColouredNoise2D(double **omega, double **zeta,
+			     double w, double tau,
+			     double lambda, double hx, int n, double ht) {
+  grf_initColouredNoiseFourier(zeta, w, tau, lambda, hx, n, ht);
+  grf_fourier2Noise(omega, (const double **)zeta, n);  
+}
+
+/* Next time step of spatially coloured noise in 'real' space with:
+ - Intensity: w
+ - temporal correlation length: tau
+ - spatial correlation length: lambda
+
+ Spatial discretisation: hx, n
+ Temporal discretisation: ht
+
+ according to Garcia-Ojalvo, Sanchez, (1992)
+ */
+void grf_nextColouredNoise2D(double **omega, double **zeta,
+			     double w, double tau,
+			     double lambda, double hx, int n, double ht) {
+  grf_nextColouredNoiseFourier(zeta, w, tau, lambda, hx, n, ht);
+  grf_fourier2Noise(omega, (const double **)zeta, n);  
+}
+
 
 void outReal(FILE *fp, const double ** m) {
   int i, j;
