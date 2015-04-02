@@ -395,11 +395,15 @@ void grf_fourier2Noise(double **omega, const double **zeta, int n) {
   grf_copyMatrix(m, zeta, n);
   invfft2D(m);
 
+  /* fprintf(ERR, "grf_fourier2Noise2D():\n"); */
   for(i=0; i<n; i++) {
     for(j=0; j<n; j++) {
       omega[i][j] = REAL(m[i],j)/(n*n);
+      /* fprintf(ERR, "(%f, %f)\t", REAL(m[i],j), omega[i][j]); */
     }
+    /* fprintf(ERR, "\n"); */
   }
+  /* exit(1); */
 }
 
 /* Initial condition for spatially coloured noise in 'real' space with:
