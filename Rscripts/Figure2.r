@@ -16,7 +16,7 @@ timeCorrScl=function(eps,tau, lambda, hx, N, mu, nu, diffT) {
 Klist=loadComplex("~/c/fourier/results/", "*t*.dat")
 
 fudgeComplexCovariance=function(K1,K2,sel) {
-    return(Mod(Reduce('+', (K1[[sel]]-mean(K1[[sel]]))*Conj(K2[[sel]]-mean(K2[[sel]]))))/length(K1[[sel]]))
+    return(Mod(Reduce('+', (K1[[sel]]-mean(K1[[sel]]))*Conj(K2[[sel]]-mean(K2[[sel]]))))/(length(K1[[sel]]-1)))
 }
 
 
