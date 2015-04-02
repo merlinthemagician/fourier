@@ -241,7 +241,7 @@ void grf_nextColouredNoiseFourier(double **zeta, double w, double tau,
       double cMuNu=eigenMuNu(lambda, hx, n, mu, nu);
       double expEigen=exp(-cMuNu/tau*ht);
       double expEigenSqr=exp(-2*cMuNu/tau*ht);
-      double scl=sqrt(w*(n*hx)*(n*hx)/tau/cMuNu*(1-expEigenSqr));
+      double scl=sqrt(w*n*hx*n*hx/tau/cMuNu*(1-expEigenSqr));
       double bMuNu[2];
       REAL(bMuNu,0)=scl;
       REAL(bMuNu,0)*=REAL(m[mu],nu);

@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
   /* double zeta[N][2*N]; */
   double **zeta, **noise2D;
   double w=5, lambda=3, tau=1;
-  int i=0, nIter=1, j=0, jMax=0;
+  int i=0, nIter=2500, j=0, jMax=100;
   FILE *fp;
   /* const char *prefix="results/w5/"; */
   const char *prefix="results/";
