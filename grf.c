@@ -24,11 +24,10 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+#include "grf.h"
+
 #define OUT stdout
 #define ERR stderr
-
-#define REAL(z,i) ((z)[2*(i)])
-#define IMAG(z,i) ((z)[2*(i)+1])
 
 #define PI (4*atan(1))
 
@@ -43,11 +42,21 @@ static gsl_fft_complex_workspace *cwork;
 static double **m, **mT;
 
 /* Allocates memory for matrix holding complex numbers */
-double **grf_allocFourierMatrix(int gridDim) {
+double **grf_allocFourierMatrix(size_t gridDim) {
   double **res=malloc(gridDim*sizeof(*res));
   int i;
   for(i=0; i<gridDim; i++) {
     res[i]=calloc(2*gridDim,sizeof(**res));
+  }
+  return res;
+}
+
+/* Allocates memory for matrix holding real numbers */
+double **grf_allocRealMatrix(size_t gridDim) {
+  double **res=malloc(gridDim*sizeof(*res));
+  int i;
+  for(i=0; i<gridDim; i++) {
+    res[i]=calloc(gridDim,sizeof(**res));
   }
   return res;
 }
@@ -358,6 +367,17 @@ void grf_printCompMatrix(FILE *fp, const double **zeta, int n) {
     fprintf(fp, "%f", re);
     if(fabs(im)>eps) fprintf(fp,"%+fi", im);
     fprintf(fp, "\n");
+  }
+}
+
+/* Print real matrix zeta to file fp */
+void grf_printMatrix(FILE *fp, const double **A, int n) {
+  int i, j;
+  for(i=0; i<n; i++) {
+    for(j=0; j<n-1; j++) {
+      fprintf(fp, "%f\t", A[i][j]);
+    }
+    fprintf(fp, "%f\n", A[i][j]);
   }
 }
 

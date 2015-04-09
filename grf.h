@@ -16,6 +16,14 @@
  *
  */
 
+#include <stddef.h>
+#include <stdio.h>
+
+/* Real and imaginary parts */
+#define REAL(z,i) ((z)[2*(i)])
+#define IMAG(z,i) ((z)[2*(i)+1])
+
+
 /* Initialisiert den Zufallsgenerator */
 void initgrf(int N);
 
@@ -23,7 +31,10 @@ void initgrf(int N);
 void grf_init(int seed, int N);
 
 /* Allocates memory for matrix holding complex numbers */
-double **grf_allocFourierMatrix(int gridDim);
+double **grf_allocFourierMatrix(size_t gridDim);
+
+/* Allocates memory for matrix holding real numbers */
+double **grf_allocRealMatrix(size_t gridDim);
 
 /*
  * Aendert Seed des Zufallsgenerators
@@ -89,6 +100,9 @@ void grf_nextColouredNoiseFourier(double **zeta, double w, double tau,
 
 /* Print complex matrix zeta to file fp */
 void grf_printCompMatrix(FILE *fp, const double **zeta, int n);
+
+/* Print real matrix zeta to file fp */
+void grf_printMatrix(FILE *fp, const double **zeta, int n);
 
 /* Convert Fourier-transformed noise back to real */
 void grf_fourier2Noise(double **m, const double **zeta, int n);
