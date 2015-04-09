@@ -42,6 +42,16 @@ static gsl_fft_complex_wavetable *cwt;
 static gsl_fft_complex_workspace *cwork;
 static double **m, **mT;
 
+/* Allocates memory for matrix holding complex numbers */
+double **grf_allocFourierMatrix(int gridDim) {
+  double **res=malloc(gridDim*sizeof(*res));
+  int i;
+  for(i=0; i<gridDim; i++) {
+    res[i]=calloc(2*gridDim,sizeof(**res));
+  }
+  return res;
+}
+
 /* Initialisiert den Zufallsgenerator */
 void initgrf(int N) {
   int i;

@@ -22,6 +22,9 @@ void initgrf(int N);
 /* Initialisiert den Zufallsgenerator */
 void grf_init(int seed, int N);
 
+/* Allocates memory for matrix holding complex numbers */
+double **grf_allocFourierMatrix(int gridDim);
+
 /*
  * Aendert Seed des Zufallsgenerators
  */
