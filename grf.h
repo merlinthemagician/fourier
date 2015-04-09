@@ -19,6 +19,9 @@
 /* Initialisiert den Zufallsgenerator */
 void initgrf(int N);
 
+/* Initialisiert den Zufallsgenerator */
+void grf_init(int seed, int N);
+
 /*
  * Aendert Seed des Zufallsgenerators
  */

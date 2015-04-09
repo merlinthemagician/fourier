@@ -40,7 +40,7 @@ static gsl_rng * r;
 
 static gsl_fft_complex_wavetable *cwt;
 static gsl_fft_complex_workspace *cwork;
-static double **m, **mT, **zeta;
+static double **m, **mT;
 
 /* Initialisiert den Zufallsgenerator */
 void initgrf(int N) {
@@ -67,11 +67,37 @@ void initgrf(int N) {
   for(i=0; i<n; i++) {
     m[i] = malloc(2*n*sizeof(double));
   }
+}
 
-  /* zeta = malloc(n*sizeof(double*)); */
-  /* for(i=0; i<n; i++) { */
-  /*   zeta[i] = malloc(2*n*sizeof(double)); */
-  /* } */
+#define MAXGRID 500
+
+static double *grf_m[MAXGRID], *grf_mT[MAXGRID];
+
+
+/* Initialisiert den Zufallsgenerator */
+void grf_init(int seed, int N) {
+  int i;
+  if((N%2) != 0) {
+    fprintf(ERR, "initgrf(): Coloured noise generation only works for even grid dimension\n");
+    exit(1);
+  }
+  n = N;
+  r = gsl_rng_alloc (gsl_rng_taus);
+  gsl_rng_set(r,seed);
+  hcwt = gsl_fft_halfcomplex_wavetable_alloc(n);
+  work = gsl_fft_real_workspace_alloc(n);
+
+  cwt = gsl_fft_complex_wavetable_alloc(n);
+  cwork = gsl_fft_complex_workspace_alloc(n);
+
+  for(i=0; i<n; i++) {
+    grf_mT[i] = calloc(2*n, sizeof(double));
+  }
+
+  /* m = malloc(n*sizeof(double*)); */
+  for(i=0; i<n; i++) {
+    grf_m[i] = malloc(2*n*sizeof(double));
+  }
 }
 
 /*
@@ -140,6 +166,18 @@ void compTrans(double **res, double**comp, int n) {
 
 }
 
+void grf_compTrans(double *res[], double *comp[], int n) {
+  int i, j;
+
+  for(i=0; i<n; i++) {
+    for(j=0; j<n; j++) {
+      REAL(res[j],i) = REAL(comp[i],j);
+      IMAG(res[j],i) = IMAG(comp[i],j);
+    }
+  }
+
+}
+
 /*Berechne Index*/
 int refind(int i) {
   return i == 0? 0: n-i;
@@ -186,7 +224,7 @@ void genHC2D(double alpha, double hx, double **m) {
 }
 
 /*Generiere halbkomplexes zweidimensionales Feld*/
-void genHC2D_noScaling(double **m) {
+void grf_genHC2D_noScaling(double *m[]) {
   int i, j, jmax;
   for(i=0; i<=n/2; i++) {
     if( i% (n/2) == 0 ) jmax = n/2;
@@ -230,11 +268,11 @@ double eigenMuNu(double lambda, double hx, int n, int mu, int nu) {
 
  according to Garcia-Ojalvo, Sanchez, (1992)
  */
-void grf_nextColouredNoiseFourier(double **zeta, double w, double tau,
+void grf_nextColouredNoiseFourier(double *zeta[], double w, double tau,
 				  double lambda, double hx, int n, double ht) {
   int mu, nu;
   /* Initialise Fourier field */
-  genHC2D_noScaling(m);
+  grf_genHC2D_noScaling(grf_m);
 
   for(mu=0; mu<n; mu++) {
     for(nu=0; nu<n; nu++) {
@@ -244,10 +282,10 @@ void grf_nextColouredNoiseFourier(double **zeta, double w, double tau,
       double scl=sqrt(w*n*hx*n*hx/tau/cMuNu*(1-expEigenSqr));
       double bMuNu[2];
       REAL(bMuNu,0)=scl;
-      REAL(bMuNu,0)*=REAL(m[mu],nu);
+      REAL(bMuNu,0)*=REAL(grf_m[mu],nu);
 
       IMAG(bMuNu,0)=scl;
-      IMAG(bMuNu,0)*=IMAG(m[mu],nu);
+      IMAG(bMuNu,0)*=IMAG(grf_m[mu],nu);
       
       REAL(zeta[mu],nu)*=expEigen;
       IMAG(zeta[mu],nu)*=expEigen;
@@ -268,11 +306,13 @@ void grf_nextColouredNoiseFourier(double **zeta, double w, double tau,
 
  according to Garcia-Ojalvo, Sanchez, (1992)
  */
-void grf_initColouredNoiseFourier(double **zeta, double w, double tau,
+void grf_initColouredNoiseFourier(double *zeta[], double w, double tau,
 				  double lambda, double hx, int n, double ht) {
   int mu, nu;
   /* Initialise Fourier field */
-  genHC2D_noScaling(m);
+    /* fprintf(ERR, "grf_initColouredNoiseFourier(): Generating Fourier transform\n"); */
+  grf_genHC2D_noScaling(grf_m);
+  /* fprintf(ERR, "grf_initColouredNoiseFourier(): Done.\n"); */
 
   for(mu=0; mu<n; mu++) {
     for(nu=0; nu<n; nu++) {
@@ -280,13 +320,13 @@ void grf_initColouredNoiseFourier(double **zeta, double w, double tau,
       double scl=sqrt(w*(n*hx)*(n*hx)/tau/cMuNu);
 
       REAL(zeta[mu],nu)=scl;
-      REAL(zeta[mu],nu)*=REAL(m[mu],nu);
+      REAL(zeta[mu],nu)*=REAL(grf_m[mu],nu);
 
       IMAG(zeta[mu],nu)=scl;
-      IMAG(zeta[mu],nu)*=IMAG(m[mu],nu);
-
+      IMAG(zeta[mu],nu)*=IMAG(grf_m[mu],nu);
     }
   }
+  /* fprintf(ERR, "grf_initColouredNoiseFourier(): Scaled Fourier transform\n"); */
 }
 
 
@@ -353,7 +393,7 @@ void fft2D(double **m) {
 }
 
 /*Inverse Fourier-Transformation fuer quadratische Matrizen */
-void invfft2D(double **m) {
+void invfft2D(double **m, double **mT) {
   int i;
 
   for(i=0; i<n; i++) {
@@ -378,6 +418,32 @@ void invfft2D(double **m) {
   compTrans(m, mT, n);
 }
 
+/*Inverse Fourier-Transformation fuer quadratische Matrizen */
+void grf_invfft2D(double *m[], double *mT[]) {
+  int i;
+
+  for(i=0; i<n; i++) {
+    gsl_fft_complex_backward(m[i], 1, n, cwt, cwork);
+  }
+
+  grf_compTrans(mT, m, n);
+
+  for(i=0; i<n; i++) {
+    gsl_fft_complex_backward(mT[i], 1, n, cwt, cwork);
+  }
+
+/*   fprintf(OUT, "Transponiert:\n"); */
+/*   for(i=0; i<n; i++) { */
+/*     for(j=0; j<n; j++) { */
+/*       fprintf(OUT, "(%0.3f,%0.3f) ",  */
+/* 	      REAL(mT[i],j), */
+/* 	      IMAG(mT[i],j)); */
+/*     } */
+/*   } */
+
+  grf_compTrans(m, mT, n);
+}
+
 
 void grf_copyMatrix(double **m, const double **a, int n) {
   int i, j;
@@ -390,15 +456,15 @@ void grf_copyMatrix(double **m, const double **a, int n) {
 }
 
 /* Convert Fourier-transformed noise back to real */
-void grf_fourier2Noise(double **omega, const double **zeta, int n) {
+void grf_fourier2Noise(double *omega[], const double *zeta[], int n) {
   int i, j;
-  grf_copyMatrix(m, zeta, n);
-  invfft2D(m);
+  grf_copyMatrix(grf_m, zeta, n);
+  grf_invfft2D(grf_m, grf_mT);
 
   /* fprintf(ERR, "grf_fourier2Noise2D():\n"); */
   for(i=0; i<n; i++) {
     for(j=0; j<n; j++) {
-      omega[i][j] = REAL(m[i],j)/(n*n);
+      omega[i][j] = REAL(grf_m[i],j)/(n*n);
       /* fprintf(ERR, "(%f, %f)\t", REAL(m[i],j), omega[i][j]); */
     }
     /* fprintf(ERR, "\n"); */
@@ -416,7 +482,7 @@ void grf_fourier2Noise(double **omega, const double **zeta, int n) {
 
  according to Garcia-Ojalvo, Sanchez, (1992)
  */
-void grf_initColouredNoise2D(double **omega, double **zeta,
+void grf_initColouredNoise2D(double *omega[], double *zeta[],
 			     double w, double tau,
 			     double lambda, double hx, int n, double ht) {
   grf_initColouredNoiseFourier(zeta, w, tau, lambda, hx, n, ht);
@@ -433,7 +499,7 @@ void grf_initColouredNoise2D(double **omega, double **zeta,
 
  according to Garcia-Ojalvo, Sanchez, (1992)
  */
-void grf_nextColouredNoise2D(double **omega, double **zeta,
+void grf_nextColouredNoise2D(double *omega[], double *zeta[],
 			     double w, double tau,
 			     double lambda, double hx, int n, double ht) {
   grf_nextColouredNoiseFourier(zeta, w, tau, lambda, hx, n, ht);
@@ -460,7 +526,7 @@ void grf2D(double alpha, double hx, double **v) {
   int i,j;
 
   genHC2D(alpha, hx, m);
-  invfft2D(m);
+  invfft2D(m, mT);
 
   for(i=0; i<n; i++) {
     for(j=0; j<n; j++) {
@@ -482,7 +548,7 @@ void unirf2D(double alpha, double hx, double **v) {
   int i,j;
 
   unirfHC2D(alpha, hx, m);
-  invfft2D(m);
+  invfft2D(m, mT);
 
   for(i=0; i<n; i++) {
     for(j=0; j<n; j++) {
@@ -502,7 +568,7 @@ void normgrf2D(double alpha, double hx, double **v) {
   double mean=0, sqrsum=0, variance=0;
 
   genHC2D(alpha, hx, m);
-  invfft2D(m);
+  invfft2D(m, mT);
 
   for(i=0; i<n; i++) {
     for(j=0; j<n; j++) {
