@@ -1,15 +1,23 @@
-#	Makefile -- Sat Apr  5 14:50:06 MET DST 1997
-#	Copyright (c) 1992, 1997 Axel T. Schreiner
+##	Makefile
+#
 
-# include /people/isie002/include/make/c.h
-# include /Users/merlin/c/include/make/c.h
-include ${HOME}/c/include/make/c.h
+CC      = gcc#
+CFLAGS	=-Wall -pedantic#
 
-D =	Fourier-Transformation
+rm	= rm -f#				delete file
+
+all:	_
+clean::		;@ $(MAKE) T='$T' _clean
+_clean:	_	;  $(rm) *.o $T a.out core *.tmp *.ps *.bak
+run::	_
+_:		;@ echo -------------------- $D --------------------
+
+D =	Generate coloured noise
 
 T = test$x grf$x grf.o testSpatTemp$x grf_field.o
 
 INC=/sw/include/
+GSL = `gsl-config --cflags` `gsl-config --libs` -lm
 
 all:	$T
 

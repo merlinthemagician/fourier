@@ -1,0 +1,32 @@
+# Object files
+*.o
+*.ko
+
+# Libraries
+*.lib
+*.a
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Executable
+grf
+grf.dSYM/
+grf.o
+grf_field.o
+https:/
+results.bak/
+results/
+test
+test.dSYM/
+testSpatTemp
+testSpatTemp.dSYM/
+
